@@ -5,11 +5,13 @@
  */
 package pinball;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Giil
  */
-public class User implements java.io.Serializable {
+public class User implements Serializable, Comparable<User> {
 
     public String name;
     public int score;
@@ -35,5 +37,17 @@ public class User implements java.io.Serializable {
     public String toString() {
         return "User: " + getName() + "    Score: " + getScore(); 
     }
-    
+
+    @Override
+    public int compareTo(User u) {
+        if (getScore() > u.getScore()){
+            return 1;
+        }
+        else if (getScore() < u.getScore()){
+            return -1;
+        }
+        else {
+            return 0;
+        }
+    }  
 }

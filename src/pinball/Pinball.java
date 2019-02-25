@@ -5,6 +5,7 @@
  */
 package pinball;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -26,9 +27,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
@@ -49,7 +53,7 @@ public class Pinball extends Application {
     private Group arcs = new Group();
         
     // width and height of scene
-    private final int WIDTH = 500;
+    private final int WIDTH = 600;
     private final int HEIGHT = 700;
     
     // Ball count and limitation
@@ -68,27 +72,42 @@ public class Pinball extends Application {
     int points;
      
     // User and score info
+    private Text instructions = new Text("Press SPACE to start!");
     private Text userAndScore = new Text();
-    private Text leaderboard = new Text();
-    String leaderboardTxt = "";
-      
-   
+    private Text leaderBoardTxt = new Text(); 
+    String header = "Pinball Wall of Fame";
+    Text leaderBoardHeader = new Text(header);
+    //leaderBoardHeader.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
+    //private Text leaderBoard = new Text(leaderBoardTxt);     
+        
     // Scene scene;
-    
+  
     User u = null;
     
     @Override
     public void start(Stage primaryStage) {
+       
         BorderPane pane = new BorderPane();
         
         pLayout.getLayout(objects, lines, circles, arcs);
         pinballGame.getChildren().addAll(objects, lines, circles, arcs);
         
-        VBox info = new VBox(2);
-        info.getChildren().addAll(userAndScore, leaderboard);
+        VBox info = new VBox();
+        info.getChildren().addAll(userAndScore);
         info.setPrefHeight(90);
         info.setStyle("-fx-background-color: #989ba0");
         
+        VBox highScore = new VBox();
+        highScore.getChildren().addAll(leaderBoardHeader);
+        highScore.setPrefWidth(90);
+        highScore.setStyle("-fx-background-color: lightgrey;" +
+                         "-fx-border-style: solid inside;" +
+                         "-fx-border-width: 1;" +
+                         "-fx-border-radius: 5;" +
+                         "-fx-border-color: blue;" );
+        
+        pane.setTop(instructions);
+        pane.setRight(highScore);
         pane.setCenter(pinballGame);
         pane.setBottom(info);
         
@@ -133,8 +152,8 @@ public class Pinball extends Application {
                         ex.printStackTrace();
                     }
                     
-                    leaderboardTxt += u.toString() + "\n";
-                    leaderboard.setText(leaderboardTxt);
+                    leaderBoardTxt += u.toString() + "\n";
+                    leaderBoard.setText(leaderBoardTxt);
                     count = 1;
                 }
             }
@@ -158,7 +177,8 @@ public class Pinball extends Application {
     public double radius;
     private double x , y ;
     private double dx, dy;
-      
+    
+                  
     // Declaration of normal vector to line (both stationary and flippers)
     double normVect[];
     
@@ -172,6 +192,11 @@ public class Pinball extends Application {
         Rotate rotationTransform = new Rotate();
         Timeline rotationAnimation = new Timeline();
         
+        // Adding sound clip for flipper movement
+        String flipFile = "flipper.mp3";     
+        Media flipSound = new Media(new File(flipFile).toURI().toString());
+        MediaPlayer flipPlayer = new MediaPlayer(flipSound);
+               
         if (keyCode == LEFT) {
             flipperLeft1.getTransforms().add(rotationTransform);
             rotationTransform.setPivotX(flipperLeft1.getStartX());
@@ -192,7 +217,8 @@ public class Pinball extends Application {
         }
         rotationAnimation.setCycleCount(2);
         rotationAnimation.setAutoReverse(true);
-        rotationAnimation.play();    
+        rotationAnimation.play();
+        flipPlayer.play();
     }
     
     
@@ -234,6 +260,7 @@ public class Pinball extends Application {
     // moveBall() initiates checkCollision and adds air friction and gravity. 
     // Also defines the x- and y-position of the center of the ball 
     public void moveBall() {
+                
         checkCollision();
         // Adjust ball x-position (simple air resistance)
         if (dx > 0) {x += dx -= 0.00005;}
@@ -251,7 +278,13 @@ public class Pinball extends Application {
         pBall.setCenterX(x);
         pBall.setCenterY(y);
         if (pBall.getCenterX() > WIDTH || pBall.getCenterX() < 0 || pBall.getCenterY() > HEIGHT || pBall.getCenterY() < 0) {
+            // Adding sound clip to ball out
+            String outFile = "ballOut.mp3";     
+            Media outSound = new Media(new File(outFile).toURI().toString());
+            MediaPlayer outPlayer = new MediaPlayer(outSound);
+            outPlayer.play();
             stop();
+
         }
         userAndScore.setText(u.toString());
         
@@ -269,6 +302,12 @@ public class Pinball extends Application {
                 Circle circle;
                 // Adds points/score when/if ball hits circle-object
                 u.setScore(points += 100);
+                
+                //adds hit sound clip
+                String hitFile = "hit.mp3";     
+                Media hitSound = new Media(new File(hitFile).toURI().toString());
+                MediaPlayer hitPlayer = new MediaPlayer(hitSound);
+                hitPlayer.play();
                 
                 for (int i = 0; i < circles.getChildren().size(); i++) {
                     circle = (Circle) circles.getChildren().get(i);
