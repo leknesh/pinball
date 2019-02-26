@@ -8,8 +8,13 @@ package pinball;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -33,6 +38,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
@@ -42,7 +48,7 @@ import static javax.swing.JOptionPane.*;
  *
  * @author Giil
  */
-public class Pinball extends Application {
+public class Pinball extends Application  {
     
     // Layout, pane and object-groups declarations
     private PinballLayout pLayout = new PinballLayout();
@@ -53,7 +59,7 @@ public class Pinball extends Application {
     private Group arcs = new Group();
         
     // width and height of scene
-    private final int WIDTH = 600;
+    private final int WIDTH = 500;
     private final int HEIGHT = 700;
     
     // Ball count and limitation
@@ -74,18 +80,18 @@ public class Pinball extends Application {
     // User and score info
     private Text instructions = new Text("Press SPACE to start!");
     private Text userAndScore = new Text();
+    private String leaderBoardString = "";
     private Text leaderBoardTxt = new Text(); 
-    String header = "Pinball Wall of Fame";
-    Text leaderBoardHeader = new Text(header);
-    //leaderBoardHeader.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-    //private Text leaderBoard = new Text(leaderBoardTxt);     
+    Text leaderBoardHeader = new Text("Pinball Wall of Fame");
+    ArrayList<User> highScores;
+    VBox highScoreBox;
         
     // Scene scene;
   
     User u = null;
     
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws IOException, ClassNotFoundException {
        
         BorderPane pane = new BorderPane();
         
@@ -97,22 +103,26 @@ public class Pinball extends Application {
         info.setPrefHeight(90);
         info.setStyle("-fx-background-color: #989ba0");
         
-        VBox highScore = new VBox();
-        highScore.getChildren().addAll(leaderBoardHeader);
-        highScore.setPrefWidth(90);
-        highScore.setStyle("-fx-background-color: lightgrey;" +
+        leaderBoardHeader.setFont(Font.font ("Verdana", FontWeight.BOLD, 15));
+        leaderBoardHeader.setFill(Color.BLUE);
+        highScoreBox = new VBox();
+        highScoreBox.getChildren().add(leaderBoardHeader);
+        getHighScore();
+        highScoreBox.setPrefWidth(90);
+        highScoreBox.setStyle("-fx-background-color: lightgrey;" +
                          "-fx-border-style: solid inside;" +
                          "-fx-border-width: 1;" +
                          "-fx-border-radius: 5;" +
                          "-fx-border-color: blue;" );
+
         
         pane.setTop(instructions);
-        pane.setRight(highScore);
+        pane.setRight(highScoreBox);
         pane.setCenter(pinballGame);
         pane.setBottom(info);
         
         
-        Scene scene = new Scene(pane, WIDTH, HEIGHT);
+        Scene scene = new Scene(pane, WIDTH+200, HEIGHT);
         primaryStage.setTitle("Pinball!");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -122,39 +132,21 @@ public class Pinball extends Application {
         scene.setOnKeyPressed((KeyEvent event) -> {
             if (event.getCode() == SPACE) {
                 if (count == 1) {
-                    String userName = showInputDialog("Enter username: ");
-                    u = new User(userName, 0);
-                    startGame();
-                    points = 0;
-                    count++;
+                    newGame();
                 } else if (count == 2 || count == 3) {
                     startGame();
                     count ++;
                 } else if (count > MAX_COUNT) {
                     
                     try {
-                        FileOutputStream fileOut = new FileOutputStream("leaderboard.ser");
-                        ObjectOutputStream out = new ObjectOutputStream(fileOut);
-                        out.writeObject(u);
-                        out.close();
-                        fileOut.close();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
+                        writeHighScore(u);
+                    //automatic "catch-phrases"    
+                    } catch (IOException | ClassNotFoundException ex) {
+                        Logger.getLogger(Pinball.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
-                    try {
-                        FileInputStream fileIn = new FileInputStream("leaderboard.ser");
-                        ObjectInputStream in = new ObjectInputStream(fileIn);
-                        u = (User) in.readObject();
-                        in.close();
-                        fileIn.close();
-                    } catch (Exception ex ) {
-                        ex.printStackTrace();
-                    }
+                    newGame();
                     
-                    leaderBoardTxt += u.toString() + "\n";
-                    leaderBoard.setText(leaderBoardTxt);
-                    count = 1;
                 }
             }
             if (event.getCode() == LEFT || event.getCode() == RIGHT) {
@@ -223,8 +215,17 @@ public class Pinball extends Application {
     
     
     // startGame creates new ball and starts animation
-    public void startGame() {
+    public void startGame() {                   
         newBall();
+    }
+    
+    //newGame creates a new game and starts startGame methods
+    public void newGame(){
+        String userName = showInputDialog("Enter username: ");
+        u = new User(userName, 0);
+        points = 0;
+        count = 1;
+        startGame();
     }
     
     // stop() stops the animation if the ball hits the bottom 
@@ -266,8 +267,9 @@ public class Pinball extends Application {
         if (dx > 0) {x += dx -= 0.00005;}
         if (dx < 0) {x += dx += 0.00005;}
         
-        // Add gravity*
-        y += dy += 0.0012; 
+        // Add gravity*, 0.00128 for testing purposes
+        //y += dy += 0.0012; 
+        y += dy += 0.00128; 
         
         // Max speed limitation! (to prevent errors and chaos...)
         if (dx > 1.02) {dx = 1.02;}
@@ -283,6 +285,7 @@ public class Pinball extends Application {
             Media outSound = new Media(new File(outFile).toURI().toString());
             MediaPlayer outPlayer = new MediaPlayer(outSound);
             outPlayer.play();
+                       
             stop();
 
         }
@@ -414,4 +417,54 @@ public class Pinball extends Application {
         return outVect;
     }
     
+    //Fetching saved highscorelist, sorting and printing to main pane. 
+    //for use before game is run.
+    public void getHighScore() throws IOException, ClassNotFoundException {
+        try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.ser"))
+                ){
+            highScores = (ArrayList) input.readObject();
+            Collections.sort(highScores);
+            String topTen = "";
+            //creating String with highscore data
+            for (User u: highScores){
+                topTen += u.toString() + "\n";
+            }
+            highScoreBox.getChildren().add(new Text(topTen));
+        }
+    }
+    
+    //writing a new score to highscorelist
+    public void writeHighScore(User user) throws IOException, ClassNotFoundException {
+        //fetching arraylist, adding new score, sorting and printing 
+        
+        try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.jar"))
+                ){
+            highScores = (ArrayList) input.readObject();
+            highScores.add(user);
+            Collections.sort(highScores);
+            //removing lowest score if not in top10. 
+            //List will never be > 11 at this point
+            if (highScores.size() > 10){
+                highScores.remove(11);
+            }
+            String topTen = "";
+            //creating String with highscore data
+            for (User u: highScores){
+                topTen += u.toString() + "\n";
+            }
+            highScoreBox.getChildren().add(new Text(topTen));
+            input.close();
+        }
+       
+        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream("highscore.jar"))
+                ){
+            if (highScores.size() > 0){
+                for (User u: highScores) {
+                    output.writeObject(u); 
+                }
+            }
+            output.close();
+        } 
+    }                      
+
 }
