@@ -146,7 +146,6 @@ public class Pinball extends Application  {
                     }
                     
                     newGame();
-                    
                 }
             }
             if (event.getCode() == LEFT || event.getCode() == RIGHT) {
@@ -420,9 +419,9 @@ public class Pinball extends Application  {
     //Fetching saved highscorelist, sorting and printing to main pane. 
     //for use before game is run.
     public void getHighScore() throws IOException, ClassNotFoundException {
-        try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.ser"))
+        try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.jar"))
                 ){
-            highScores = (ArrayList) input.readObject();
+            highScores = (ArrayList<User>) input.readObject();
             Collections.sort(highScores);
             String topTen = "";
             //creating String with highscore data
@@ -430,6 +429,9 @@ public class Pinball extends Application  {
                 topTen += u.toString() + "\n";
             }
             highScoreBox.getChildren().add(new Text(topTen));
+        }
+        catch (IOException ex){
+            alert("ERRRRROR");
         }
     }
     
@@ -439,7 +441,7 @@ public class Pinball extends Application  {
         
         try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.jar"))
                 ){
-            highScores = (ArrayList) input.readObject();
+            highScores = (ArrayList<User>) input.readObject();
             highScores.add(user);
             Collections.sort(highScores);
             //removing lowest score if not in top10. 
@@ -460,11 +462,15 @@ public class Pinball extends Application  {
                 ){
             if (highScores.size() > 0){
                 for (User u: highScores) {
-                    output.writeObject(u); 
+                    output.writeObject(highScores); 
                 }
             }
             output.close();
         } 
     }                      
+
+    private void alert(String errrrror) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
 }
