@@ -107,7 +107,7 @@ public class Pinball extends Application  {
         leaderBoardHeader.setFill(Color.BLUE);
         highScoreBox = new VBox();
         highScoreBox.getChildren().add(leaderBoardHeader);
-        getHighScore();
+        //getHighScore();
         highScoreBox.setPrefWidth(90);
         highScoreBox.setStyle("-fx-background-color: lightgrey;" +
                          "-fx-border-style: solid inside;" +
@@ -283,8 +283,7 @@ public class Pinball extends Application  {
             String outFile = "ballOut.mp3";     
             Media outSound = new Media(new File(outFile).toURI().toString());
             MediaPlayer outPlayer = new MediaPlayer(outSound);
-            outPlayer.play();
-                       
+            outPlayer.play();            
             stop();
 
         }
@@ -430,18 +429,18 @@ public class Pinball extends Application  {
             }
             highScoreBox.getChildren().add(new Text(topTen));
         }
-        catch (IOException ex){
-            alert("ERRRRROR");
-        }
     }
     
     //writing a new score to highscorelist
     public void writeHighScore(User user) throws IOException, ClassNotFoundException {
         //fetching arraylist, adding new score, sorting and printing 
         
-        try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.jar"))
+        /*try ( ObjectInputStream input = new ObjectInputStream(new FileInputStream("highscore.jar"))
                 ){
             highScores = (ArrayList<User>) input.readObject();
+            input.close();
+            
+            //adding current user entry to top10 list and sorting
             highScores.add(user);
             Collections.sort(highScores);
             //removing lowest score if not in top10. 
@@ -455,22 +454,14 @@ public class Pinball extends Application  {
                 topTen += u.toString() + "\n";
             }
             highScoreBox.getChildren().add(new Text(topTen));
-            input.close();
         }
-       
+       */
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream("highscore.jar"))
                 ){
             if (highScores.size() > 0){
-                for (User u: highScores) {
-                    output.writeObject(highScores); 
-                }
+                output.writeObject(highScores); 
             }
             output.close();
         } 
     }                      
-
-    private void alert(String errrrror) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }
