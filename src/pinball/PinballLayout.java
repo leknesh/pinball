@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 
 /**
  *
@@ -22,7 +23,7 @@ public class PinballLayout {
     
     double nAngle;
     
-    public void getLayout(Group objects, Group lines, Group circles, Group arcs) {
+    public void getLayout(Group objects, Group lines, Group circles, Group arcs, Group rectangles) {
         
         Line1 lStart1 = new Line1(480, 600, 480, 110);
         lStart1.setStroke(Color.BLACK);
@@ -190,6 +191,23 @@ public class PinballLayout {
         lFlipperRight3.setStroke(Color.BLACK);
         objects.getChildren().add(lFlipperRight3);
         lines.getChildren().add(lFlipperRight3);
+        
+        Line1 lStartLine1 = new Line1(450, 487, 457, 487);
+        lStartLine1.setStroke(Color.BLACK);
+        objects.getChildren().add(lStartLine1);
+        lines.getChildren().add(lStartLine1);
+        
+        Line1 lStartLine2 = new Line1(473, 487, 480, 487);
+        lStartLine2.setStroke(Color.BLACK);
+        objects.getChildren().add(lStartLine2);
+        lines.getChildren().add(lStartLine2);
+        
+        Rectangle launchRect = new Rectangle(459, 487, 12, 20);
+        launchRect.setStroke(Color.BLACK);
+        launchRect.setFill(Color.BLACK);
+        objects.getChildren().add(launchRect);
+        rectangles.getChildren().add(launchRect);
+        
         
         Circle sTriangleLeft1 = new Circle(122, 370, 3);
         sTriangleLeft1.setStroke(Color.BLACK);
