@@ -145,12 +145,12 @@ public class Pinball extends Application  {
                 } else if (count == 2 || count == 3) {
                     startGame();
                 } else if (count > MAX_COUNT) {
-                    try {
+                    /*try {
                         highScores.newScore(u);
                     //automatic "catch-phrases"    
                     } catch (IOException | ClassNotFoundException ex) {
                         Logger.getLogger(Pinball.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    }*/
                     count = 1;
                     newGame();  
                 }
