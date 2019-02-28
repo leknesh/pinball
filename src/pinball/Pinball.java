@@ -118,11 +118,11 @@ public class Pinball extends Application  {
         highScoreBox.getChildren().add(TOPTEN_HEADER);
         
         //fetching topTen-arraylist and printing to string
-        highScores = new HighScores();
+        //highScores = new HighScores();
         String topTen = "";
-        for (User u: highScores){
+        /*for (User u: highScores){
             topTen += u.toString() + "\n";
-        }
+        }*/
         highScoreBox.getChildren().add(new Text(topTen));
         
         pane.setTop(instructions);
