@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package pinball;
 
 import javafx.scene.Group;
@@ -14,14 +10,12 @@ import javafx.scene.shape.Rectangle;
 
 /**
  *
- * @author Giil
+ * author: Gunnar Giil
  * 
  * This class creates objects defining the borders and obstacles of the pinball game
  * 
  */
 public class PinballLayout {
-    
-    double nAngle;
     
     public void getLayout(Group objects, Group lines, Group circles, Group arcs, Group rectangles) {
         
@@ -281,12 +275,5 @@ public class PinballLayout {
         objects.getChildren().add(sTriangleRightTop);
         circles.getChildren().add(sTriangleRightTop);
         
-        
-        
     }
-    
-    
-    
-    
-    
 }

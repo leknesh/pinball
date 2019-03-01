@@ -1,34 +1,25 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package pinball;
 
-/**
- *
- * @author Giil
- */
+package pinball;
 
 import javafx.scene.shape.Line;
 
-
-/**
- * @author Gunnar Giil
+/*
+ * 
+ * author: Gunnar Giil
+ *
+ * This class defines a construcor method for Line1 which extends Line. 
+ * The class ipmlemetns a method that calculates and retruns the normal vector to a line. 
+ *
  */
 
-/*
- * Line1 is a class extending Line
- * It adds a funtion to return normal vector of line-objects
-*/
 public class Line1 extends Line {
 
-
+    // Constructor method
     public Line1(double startX, double startY, double endX, double endY) {
         super(startX, startY, endX, endY);
     }
 
-    // Function to return the normal vector of a line 
+    // Method that calculates and returns normal vector as a double[]
     public double[] getNormalVector() {
         double deltaX = getEndX()-getStartX();
         double deltaY = getEndY()-getStartY();

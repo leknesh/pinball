@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package pinball;
 
 import java.io.File;
@@ -44,9 +40,15 @@ import static javax.swing.JOptionPane.*;
 
 /**
  *
- * @author Giil
+ * authors: Gunnar Giil, Henriette Leknes
+ * 
+ * This class implements start method, functions for game progression and ball handling. 
+ * 
  */
+
 public class Pinball extends Application  {
+    
+    // Variable declarations are added by Gunnar Giil and Henriette Leknes
     
     // Layout, pane and object-groups declarations
     private PinballLayout pLayout = new PinballLayout();
@@ -104,6 +106,15 @@ public class Pinball extends Application  {
     private Timeline animation;
     public PathTransition ptLaunch; 
     
+    /*
+     * Authors: Gunnar Giil, Henriette Leknes
+     *
+     * Start method 
+     * Fetching objects
+     * Adding panes and scene
+     * KeyPressed-event to start game
+     *
+    */
     @Override
     public void start(Stage primaryStage) throws IOException, ClassNotFoundException {
        
@@ -172,7 +183,8 @@ public class Pinball extends Application  {
         launch(args);
     }
     
-    //newGame creates a new game and starts startGame methods
+    // Author: Henriette Leknes
+    // newGame creates a new game and starts startGame methods
     public void newGame(){
         String userName = showInputDialog("Enter username: ");
         u = new User(userName, 0);
@@ -180,6 +192,7 @@ public class Pinball extends Application  {
         startGame();
     }
     
+    // Author: Gunnar Giil
     // startGame creates new ball and starts animation
     // add check's for rounds per player
     public void startGame() {
@@ -206,7 +219,8 @@ public class Pinball extends Application  {
         }
     }
     
-    // Puts ball into pane and enables ejection
+    // Author: Gunnar Giil
+    // Puts ball into pane and enables ejection with key-events
     public void launchBall() {
         // Get pinballball
         pBall = new Ball(BALL_START_X, BALL_START_Y, BALL_RADIUS, Color.GREEN);
@@ -221,9 +235,12 @@ public class Pinball extends Application  {
         // Add ball to pane
         pinballGame.getChildren().addAll(pBall);
         
+        // Creating node and path for PathTransition
         Rectangle rect = (Rectangle) rectangles.getChildren().get(0);
         Line lineLaunch = new Line(465, 497, 465, 550);
         ptLaunch = new PathTransition();
+        
+        // Key events for ball ejection and flipper movement
         scene.setOnKeyPressed((KeyEvent event) -> {
             if (event.getCode() == DOWN) {
                  ptLaunch.setDuration(Duration.millis(2000));
@@ -237,6 +254,8 @@ public class Pinball extends Application  {
                  flipperMove(event.getCode());
             }
         });
+        
+        // Key events for ball ejection
         scene.setOnKeyReleased((KeyEvent event) -> {
             if (event.getCode() == DOWN) {
                 ptLaunch.getCurrentTime();
@@ -245,14 +264,16 @@ public class Pinball extends Application  {
                 
                 BALL_START_DY = -1.02 * durationSeconds;
                 if (BALL_START_DY < 0) {
-                    newBall();
+                    animateBall();
                 }
             }
         });
     }    
     
-    // newBall() initiates moveBall() with animation. 
-    public void newBall() {
+    // author: Gunnar Giil
+    // starts Timeline animation for ball
+    // initiates moveBall()
+    public void animateBall() {
         dx = BALL_START_DX;
         dy = BALL_START_DY;
         
@@ -264,7 +285,7 @@ public class Pinball extends Application  {
         animation.play();  
     }
     
-    // moveBall() initiates checkCollision and adds air friction and gravity. 
+    // moveBall() initiates checkCollision and adds simple(!) air friction and gravity. 
     // Also defines the x- and y-position of the center of the ball 
     public void moveBall() {
         checkCollision();
@@ -280,22 +301,26 @@ public class Pinball extends Application  {
         // Max speed limitation! (to prevent errors and chaos...)
         if (dx > 1.02) {dx = 1.02;}
         if (dx < -1.02) {dx = -1.02;}
-        // if (dy < -1.02) {dy = -1.02;}
-        // if (dy > 1.02) {dy = 1.02;}
-        
         if (dy < -2) {dy = -2;}
         if (dy > 1.02) {dy = 1.02;}
         
+        // positioning the ball
         pBall.setCenterX(x);
         pBall.setCenterY(y);
+        
+        // check if ball leaves the game
+        // if it leaves the game -> add sound and stop animation timeline   
         if (pBall.getCenterX() > WIDTH || pBall.getCenterX() < 0 || pBall.getCenterY() > HEIGHT || pBall.getCenterY() < 0) {
             playSound(1);          
             stop();
         }
+        
         userAndScore.setText(u.toString());
     }
     
+    // authors: Gunnar Giil (collision and vector calculations), Henriette Leknes (sound implementation)
     // Checks for collision between the ball and other objects
+    // return true if collision and false if not collision
     // If collision is confirmed, new velocity vectors are generated (direction and velocities)
     public boolean checkCollision() {
         for (Node children : circles.getChildren()) {
@@ -392,7 +417,9 @@ public class Pinball extends Application  {
         return false;
     }
     
+    // author: Gunnar Giil
     // Calculating new velocity vectors
+    // Returns the vector describing the balls direction and velocity after collision
     // Formula used as basis for this calculation is found in documentation
     // The calculations are separated into smaller and more comprehendable steps... 
     public double[] newVelocityVector (double[] inVect, double[] normVect) {
@@ -410,6 +437,10 @@ public class Pinball extends Application  {
         return outVect;
     }
     
+    
+    // Author: Gunnar Giil, Henriette Leknes
+    // Rotates flippers based on keycode input.
+    // adds sound effects when flippers move
     public void flipperMove(KeyCode keyCode) {
         Line1 flipperLeft1 = (Line1) lines.getChildren().get(24);
         Line1 flipperRight1 = (Line1) lines.getChildren().get(25);

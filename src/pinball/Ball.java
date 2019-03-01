@@ -1,26 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package pinball;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-/**
+/*
+ * author: Gunnar Giil
  *
- * @author Giil
+ * This class extends Circle and defines a constructor method for Ball. 
+ * At this moment the class does not implement functionality not covered by Circle... 
+ *
  */
-
-// Ball and animation variable declarations
-
-
 
 public class Ball extends Circle {
     
-    public double radius;
-    public double x , y ;
+    // Constructor method
     public Ball(double centerX, double centerY, double radius, Color fill) {
         super(centerX, centerY, radius, fill);
     }
