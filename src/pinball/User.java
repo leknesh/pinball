@@ -44,17 +44,17 @@ public class User implements Serializable, Comparable<User> {
     // Not used in the game in this version(!)
     @Override
     public String toString() {
-        return "User: " + getName() + "    Score: " + getScore(); 
+        return getName() + "    " + getScore(); 
     }
 
     
     @Override
     public int compareTo(User u) {
         if (getScore() > u.getScore()){
-            return 1;
+            return -1;
         }
         else if (getScore() < u.getScore()){
-            return -1;
+            return 1;
         }
         else {
             return 0;

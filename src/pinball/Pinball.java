@@ -2,7 +2,11 @@
 package pinball;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import javafx.animation.KeyFrame;
@@ -86,16 +90,11 @@ public class Pinball extends Application  {
     int points;
      
     // User and score info
-    private Text instructions = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers");
+    public Text instructions = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers");
     private Text userAndScore = new Text(); 
-    private final Text TOPTEN_HEADER = new Text("Pinball Wall of Fame");
-    public String topTen;
-    public HighScores scoresObject;
-    public ArrayList<User> highScoreList;
+    public ArrayList<User> highScoreList = new ArrayList<>();
     VBox highScoreBox;
-    
-    //Declare sound identifyer
-    int soundID;
+    public final String FILENAME = "highscore.ser"; 
     
     // Declare scene and user
     Scene scene;
@@ -116,7 +115,7 @@ public class Pinball extends Application  {
      *
     */
     @Override
-    public void start(Stage primaryStage) throws IOException, ClassNotFoundException {
+    public void start(Stage primaryStage) {
        
         BorderPane pane = new BorderPane();
         
@@ -137,21 +136,10 @@ public class Pinball extends Application  {
                          "-fx-border-radius: 5;" +
                          "-fx-border-color: blue;" );
         
-        TOPTEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 15));
-        TOPTEN_HEADER.setFill(Color.BLUE);
-        highScoreBox.getChildren().add(TOPTEN_HEADER);
-        
         //fetching topTen-arraylist and printing to string
-        scoresObject = new HighScores();
-        highScoreList = scoresObject.readHighScores();
-        topTen = "Her er score:";
-        
-        highScoreList.forEach((u) -> {
-            topTen += "Bruker:" + u.toString() + "\n";
-        });
-        
-        highScoreBox.getChildren().add(new Text(topTen));
-        
+        highScoreList = readHighScores();
+        printTopTen(highScoreList);
+                
         pane.setTop(instructions);
         pane.setRight(highScoreBox);
         pane.setCenter(pinballGame);
@@ -166,14 +154,10 @@ public class Pinball extends Application  {
         
         // Scene key-events
         scene.setOnKeyPressed((KeyEvent event) -> {
-            if (event.getCode() == SPACE) {
-                newGame();             
+            if (event.getCode() == SPACE) {         
+                newGame();
             }
-        });
-        
-        
-        
-        
+        }); 
     }
     
     /**
@@ -187,6 +171,9 @@ public class Pinball extends Application  {
     // newGame creates a new game and starts startGame methods
     public void newGame(){
         String userName = showInputDialog("Enter username: ");
+        if (userName.length() > 10){
+            userName = userName.substring(0, 10);
+        }
         u = new User(userName, 0);
         points = 0;
         startGame();
@@ -195,24 +182,19 @@ public class Pinball extends Application  {
     // Author: Gunnar Giil
     // startGame creates new ball and starts animation
     // add check's for rounds per player
-    public void startGame() {
+    public void startGame(){
         //3 balls played -> highscorelist updated and ball count reset
         if (count > MAX_COUNT) {
-            try {
-                highScoreList.add(u);
-                Collections.sort(highScoreList);
-                if (highScoreList.size() > 10){
-                    highScoreList.remove(10);
-                }
-                scoresObject.setHighScores(highScoreList);
-                scoresObject.writeHighScore();
-                //automatic "catch-phrases"    
-            } catch (IOException | ClassNotFoundException ex) {
-                stop();
-            }
+
+            highScoreList.add(u);
+            Collections.sort(highScoreList);
+            if (highScoreList.size() > 10){
+                highScoreList.remove(10);
+            }  
+            writeHighScores(highScoreList);
+            printTopTen(highScoreList);
             count = 1;
-            newGame();
-           
+            newGame();  
         } else {
             launchBall();
             count++;
@@ -489,8 +471,61 @@ public class Pinball extends Application  {
         Media outSound = new Media(new File(soundFile).toURI().toString());
         MediaPlayer outPlayer = new MediaPlayer(outSound);
         outPlayer.play();
-    }    
+    } 
     
+    //IO-related methods
+    //Opening highscorefile and fetching arraylist of users/scores
+    public ArrayList<User> readHighScores() {
+        try (ObjectInputStream input = new ObjectInputStream( new FileInputStream(FILENAME))) {
+            highScoreList = (ArrayList<User>)input.readObject();
+            input.close();
+        }
+        catch (ClassNotFoundException ecnf){
+             System.out.println("Class Error");
+        }
+        catch (IOException eio) {
+            System.out.println("IO Error");
+        }
+        return highScoreList; 
+    } 
+    
+    //writing a new score to highscorelist
+    public void writeHighScores(ArrayList<User> highScoreList) {
+        try {
+            ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(FILENAME));
+            output.writeObject(highScoreList);
+            output.close();
+        }
+        catch (IOException eio) {
+            System.out.println("IO Error");
+        }
+    } 
+    
+    //fetching highscorestring from arraylist and displaying
+    private void printTopTen(ArrayList<User> highScoreList) {
+        final Text TOPTEN_HEADER = new Text("Wall of Fame");
+        TOPTEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 20));
+        TOPTEN_HEADER.setFill(Color.BLUE);
+        highScoreBox.getChildren().add(TOPTEN_HEADER);
+        
+        String topTen = "";     
+        if (highScoreList.size() > 0) {
+            for (User u: highScoreList){
+                topTen += u.toString() + "\n";
+            }
+        }
+        else {
+            topTen += "Nice try";
+        } 
+        
+        Text topTenTxt = new Text(topTen);
+        topTenTxt.setFont(Font.font("Verdana", 15));
+        topTenTxt.setFill(Color.BLUE);
+        
+        highScoreBox.getChildren().clear();
+        highScoreBox.getChildren().addAll(TOPTEN_HEADER, topTenTxt);
+    }
+ 
      // stop() stops the animation if the ball hits the bottom 
     @Override
     public void stop() {
