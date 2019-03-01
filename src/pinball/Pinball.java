@@ -38,6 +38,7 @@ import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 import static javax.swing.JOptionPane.*;
@@ -90,7 +91,7 @@ public class Pinball extends Application  {
     int points;
      
     // User and score info
-    public Text instructions = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers");
+    public Text instruction = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers \n \n");
     private Text userAndScore = new Text(); 
     public ArrayList<User> highScoreList = new ArrayList<>();
     VBox highScoreBox;
@@ -122,10 +123,19 @@ public class Pinball extends Application  {
         pLayout.getLayout(objects, lines, circles, arcs, rectangles);
         pinballGame.getChildren().addAll(objects, lines, circles, arcs, rectangles);
         
+        instruction.setFont(Font.font("Verdana", 20));
+        instruction.setFill(Color.BLUE);
+        userAndScore.setFont(Font.font("Verdana", 40));
+        userAndScore.setFill(Color.GREEN);
+        
         VBox info = new VBox();
-        info.getChildren().addAll(userAndScore);
+        info.getChildren().addAll(instruction, userAndScore);
         info.setPrefHeight(90);
-        info.setStyle("-fx-background-color: #989ba0");
+        info.setStyle("-fx-background-color: lightgrey;" +
+                         "-fx-border-style: solid inside;" +
+                         "-fx-border-width: 1;" +
+                         "-fx-border-radius: 5;" +
+                         "-fx-border-color: blue;");
         
         //building highscore sidepane
         highScoreBox = new VBox();
@@ -136,11 +146,11 @@ public class Pinball extends Application  {
                          "-fx-border-radius: 5;" +
                          "-fx-border-color: blue;" );
         
-        //fetching topTen-arraylist and printing to string
+        //fetching topTen-arraylist and generating highscorebox
         highScoreList = readHighScores();
         printTopTen(highScoreList);
-                
-        pane.setTop(instructions);
+        
+        //building main game pane       
         pane.setRight(highScoreBox);
         pane.setCenter(pinballGame);
         pane.setBottom(info);
@@ -179,20 +189,24 @@ public class Pinball extends Application  {
         startGame();
     }
     
-    // Author: Gunnar Giil
+    // Author: Gunnar Giil + Henriette Leknes
     // startGame creates new ball and starts animation
-    // add check's for rounds per player
+    // add check's for rounds per player, max 3
+    // notify game over, save scores and restart
     public void startGame(){
-        //3 balls played -> highscorelist updated and ball count reset
+        //3 balls played -> player notified, highscorelist updated and ball count reset
         if (count > MAX_COUNT) {
-
+            showMessageDialog(null, "Game Over!!\n Score: " + u.getScore());
             highScoreList.add(u);
             Collections.sort(highScoreList);
             if (highScoreList.size() > 10){
                 highScoreList.remove(10);
-            }  
+            } 
+            //saving highscores to file
             writeHighScores(highScoreList);
+            //generating new highscorelist in pane
             printTopTen(highScoreList);
+            //resetting game
             count = 1;
             newGame();  
         } else {
@@ -262,11 +276,12 @@ public class Pinball extends Application  {
         if (dy > -1.02) {dy = -1.02;}
         
         // Initiate animation and ball movement
-        animation = new Timeline( new KeyFrame(Duration.millis(2), e -> moveBall()));
+        animation = new Timeline( new KeyFrame(Duration.millis(2.5), e -> moveBall()));
         animation.setCycleCount(Timeline.INDEFINITE);
         animation.play();  
     }
     
+    // author: Gunnar Giil
     // moveBall() initiates checkCollision and adds simple(!) air friction and gravity. 
     // Also defines the x- and y-position of the center of the ball 
     public void moveBall() {
@@ -293,7 +308,7 @@ public class Pinball extends Application  {
         // check if ball leaves the game
         // if it leaves the game -> add sound and stop animation timeline   
         if (pBall.getCenterX() > WIDTH || pBall.getCenterX() < 0 || pBall.getCenterY() > HEIGHT || pBall.getCenterY() < 0) {
-            playSound(1);          
+            playSound(1);
             stop();
         }
         
@@ -419,7 +434,6 @@ public class Pinball extends Application  {
         return outVect;
     }
     
-    
     // Author: Gunnar Giil, Henriette Leknes
     // Rotates flippers based on keycode input.
     // adds sound effects when flippers move
@@ -451,29 +465,35 @@ public class Pinball extends Application  {
         rotationAnimation.setCycleCount(2);
         rotationAnimation.setAutoReverse(true);
         rotationAnimation.play();
+        
         // Adding sound clip for flipper movement
         playSound(3);
     }
     
-    //play sound
+    //Author: Henriette Leknes
+    //play soundclip according to integer input
     public void playSound(int soundID){
         String soundFile = "";  
         
-        if (soundID == 1){
-            soundFile = "ballOut.mp3";
-        }
-        else if (soundID == 2){
-            soundFile = "hit.mp3";
-        }
-        else if (soundID == 3){
-            soundFile = "flipper.mp3";
+        switch (soundID) {
+            case 1:
+                soundFile = "ballOut.mp3";
+                break;
+            case 2:
+                soundFile = "hit.mp3";
+                break;
+            case 3:
+                soundFile = "flipper.mp3";
+                break;
+            default:
+                break;
         }
         Media outSound = new Media(new File(soundFile).toURI().toString());
         MediaPlayer outPlayer = new MediaPlayer(outSound);
         outPlayer.play();
     } 
     
-    //IO-related methods
+    //Author: Henriette Leknes
     //Opening highscorefile and fetching arraylist of users/scores
     public ArrayList<User> readHighScores() {
         try (ObjectInputStream input = new ObjectInputStream( new FileInputStream(FILENAME))) {
@@ -489,6 +509,7 @@ public class Pinball extends Application  {
         return highScoreList; 
     } 
     
+    //Author: Henriette Leknes
     //writing a new score to highscorelist
     public void writeHighScores(ArrayList<User> highScoreList) {
         try {
@@ -501,31 +522,34 @@ public class Pinball extends Application  {
         }
     } 
     
-    //fetching highscorestring from arraylist and displaying
+    //Author: Henriette Leknes
+    //fetching highscorestring from arraylist and displaying in Highscorepane
+    //pane generation placed in method to enable refreshing after game finish
     private void printTopTen(ArrayList<User> highScoreList) {
-        final Text TOPTEN_HEADER = new Text("Wall of Fame");
+        final Text TOPTEN_HEADER = new Text("Wall of Fame \n");
         TOPTEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 20));
         TOPTEN_HEADER.setFill(Color.BLUE);
-        highScoreBox.getChildren().add(TOPTEN_HEADER);
         
         String topTen = "";     
         if (highScoreList.size() > 0) {
             for (User u: highScoreList){
-                topTen += u.toString() + "\n";
+                topTen += u.toString() + "\n\n";
             }
         }
         else {
-            topTen += "Nice try";
+            topTen += "You are No 1!";
         } 
         
         Text topTenTxt = new Text(topTen);
         topTenTxt.setFont(Font.font("Verdana", 15));
         topTenTxt.setFill(Color.BLUE);
+        topTenTxt.setTextAlignment(TextAlignment.RIGHT);
         
         highScoreBox.getChildren().clear();
         highScoreBox.getChildren().addAll(TOPTEN_HEADER, topTenTxt);
     }
- 
+    
+    //Author: Gunnar Giil
      // stop() stops the animation if the ball hits the bottom 
     @Override
     public void stop() {

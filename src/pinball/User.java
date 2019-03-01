@@ -41,10 +41,15 @@ public class User implements Serializable, Comparable<User> {
     
     // toString method
     // returning a string containing username and score
-    // Not used in the game in this version(!)
     @Override
     public String toString() {
-        return getName() + "    " + getScore(); 
+        String string = getName();
+        //adding a number of spaces to increase readability
+        for (int i = getName().length(); i<20; i++){
+            string += " ";
+        }
+        string += getScore() + " "; 
+        return string;
     }
 
     
