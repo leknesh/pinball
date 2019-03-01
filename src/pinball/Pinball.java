@@ -7,6 +7,8 @@ package pinball;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.PathTransition;
@@ -82,13 +84,16 @@ public class Pinball extends Application  {
     int points;
      
     // User and score info
-    private Text instructions = new Text("Press SPACE to start!");
-    private Text userAndScore = new Text();
-    private String leaderBoardString = "";
-    private Text leaderBoardTxt = new Text(); 
-    Text TOPTEN_HEADER = new Text("Pinball Wall of Fame");
-    HighScores highScores;
+    private Text instructions = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers");
+    private Text userAndScore = new Text(); 
+    private final Text TOPTEN_HEADER = new Text("Pinball Wall of Fame");
+    public String topTen;
+    public HighScores scoresObject;
+    public ArrayList<User> highScoreList;
     VBox highScoreBox;
+    
+    //Declare sound identifyer
+    int soundID;
     
     // Declare scene and user
     Scene scene;
@@ -126,11 +131,14 @@ public class Pinball extends Application  {
         highScoreBox.getChildren().add(TOPTEN_HEADER);
         
         //fetching topTen-arraylist and printing to string
-        //highScores = new HighScores();
-        String topTen = "";
-        /*for (User u: highScores){
-            topTen += u.toString() + "\n";
-        }*/
+        scoresObject = new HighScores();
+        highScoreList = scoresObject.readHighScores();
+        topTen = "Her er score:";
+        
+        highScoreList.forEach((u) -> {
+            topTen += "Bruker:" + u.toString() + "\n";
+        });
+        
         highScoreBox.getChildren().add(new Text(topTen));
         
         pane.setTop(instructions);
@@ -148,26 +156,8 @@ public class Pinball extends Application  {
         // Scene key-events
         scene.setOnKeyPressed((KeyEvent event) -> {
             if (event.getCode() == SPACE) {
-                newGame();
-                /*
-                if (count == 1) {
-                    newGame();
-                } else if (count == 2 || count == 3) {
-                    startGame();
-                } else if (count > MAX_COUNT) {
-                    try {
-                        highScores.newScore(u);
-                    //automatic "catch-phrases"    
-                    } catch (IOException | ClassNotFoundException ex) {
-                        Logger.getLogger(Pinball.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    count = 1;
-                    newGame();  
-                }*/
-            }/*
-            if (event.getCode() == LEFT || event.getCode() == RIGHT) {
-                flipperMove(event.getCode());
-            }*/
+                newGame();             
+            }
         });
         
         
@@ -192,8 +182,21 @@ public class Pinball extends Application  {
     
     // startGame creates new ball and starts animation
     // add check's for rounds per player
-    public void startGame() {                   
+    public void startGame() {
+        //3 balls played -> highscorelist updated and ball count reset
         if (count > MAX_COUNT) {
+            try {
+                highScoreList.add(u);
+                Collections.sort(highScoreList);
+                if (highScoreList.size() > 10){
+                    highScoreList.remove(10);
+                }
+                scoresObject.setHighScores(highScoreList);
+                scoresObject.writeHighScore();
+                //automatic "catch-phrases"    
+            } catch (IOException | ClassNotFoundException ex) {
+                stop();
+            }
             count = 1;
             newGame();
            
@@ -286,18 +289,10 @@ public class Pinball extends Application  {
         pBall.setCenterX(x);
         pBall.setCenterY(y);
         if (pBall.getCenterX() > WIDTH || pBall.getCenterX() < 0 || pBall.getCenterY() > HEIGHT || pBall.getCenterY() < 0) {
-            
-            // Adding sound clip to ball out
-            String outFile = "ballOut.mp3";     
-            Media outSound = new Media(new File(outFile).toURI().toString());
-            MediaPlayer outPlayer = new MediaPlayer(outSound);
-            outPlayer.play();            
+            playSound(1);          
             stop();
         }
         userAndScore.setText(u.toString());
-        
-        System.out.println("XXXXX  : " + dx);
-        System.out.println("YYYYY  : " + dy + "\n");
     }
     
     // Checks for collision between the ball and other objects
@@ -310,10 +305,7 @@ public class Pinball extends Application  {
                 u.setScore(points += 100);
                 
                 //adds hit sound clip
-                String hitFile = "hit.mp3";     
-                Media hitSound = new Media(new File(hitFile).toURI().toString());
-                MediaPlayer hitPlayer = new MediaPlayer(hitSound);
-                hitPlayer.play();
+                playSound(2);
                 
                 for (int i = 0; i < circles.getChildren().size(); i++) {
                     circle = (Circle) circles.getChildren().get(i);
@@ -424,12 +416,7 @@ public class Pinball extends Application  {
         
         Rotate rotationTransform = new Rotate();
         Timeline rotationAnimation = new Timeline();
-        
-        // Adding sound clip for flipper movement
-        String flipFile = "flipper.mp3";     
-        Media flipSound = new Media(new File(flipFile).toURI().toString());
-        MediaPlayer flipPlayer = new MediaPlayer(flipSound);
-               
+                      
         if (keyCode == LEFT) {
             flipperLeft1.getTransforms().add(rotationTransform);
             rotationTransform.setPivotX(flipperLeft1.getStartX());
@@ -451,8 +438,27 @@ public class Pinball extends Application  {
         rotationAnimation.setCycleCount(2);
         rotationAnimation.setAutoReverse(true);
         rotationAnimation.play();
-        flipPlayer.play();
+        // Adding sound clip for flipper movement
+        playSound(3);
     }
+    
+    //play sound
+    public void playSound(int soundID){
+        String soundFile = "";  
+        
+        if (soundID == 1){
+            soundFile = "ballOut.mp3";
+        }
+        else if (soundID == 2){
+            soundFile = "hit.mp3";
+        }
+        else if (soundID == 3){
+            soundFile = "flipper.mp3";
+        }
+        Media outSound = new Media(new File(soundFile).toURI().toString());
+        MediaPlayer outPlayer = new MediaPlayer(outSound);
+        outPlayer.play();
+    }    
     
      // stop() stops the animation if the ball hits the bottom 
     @Override
