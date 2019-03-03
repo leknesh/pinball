@@ -6,7 +6,11 @@ import java.io.Serializable;
 /*
  * authors: Gunnar Giil, Henriette Leknes
  *
- * This class defines a cunstructor method for User, and contains set- and get-methods for username and score. 
+ * This class defines a cunstructor method for User, and contains set- and 
+get-methods for username and score. A string can be built in the toString-method, 
+and a compareTo-method enables an arraylist of users to be sorted according to 
+score using the Comparable-interface. The class also implements serializable to enable 
+saving of user objects to file.
  *
  */
 
@@ -44,7 +48,7 @@ public class User implements Serializable, Comparable<User> {
     @Override
     public String toString() {
         String string = getName();
-        //adding a number of spaces to increase readability
+        //adding a number of spaces to name length to increase readability
         for (int i = getName().length(); i<20; i++){
             string += " ";
         }
@@ -52,7 +56,9 @@ public class User implements Serializable, Comparable<User> {
         return string;
     }
 
-    
+    // compareTo-method
+    // enables an arraylist of users to be sorted based on game score.
+    // requires Comparable interface
     @Override
     public int compareTo(User u) {
         if (getScore() > u.getScore()){

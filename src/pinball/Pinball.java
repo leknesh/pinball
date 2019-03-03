@@ -91,9 +91,10 @@ public class Pinball extends Application  {
     int points;
      
     // User and score info
-    public Text instruction = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers \n \n");
+    final Text TOPFIFTEEN_HEADER = new Text("Wall of Fame \n");
+    private Text topFifteenTxt;
     private Text userAndScore = new Text(); 
-    public ArrayList<User> highScoreList = new ArrayList<>();
+    private ArrayList<User> highScoreList = new ArrayList<>();
     VBox highScoreBox;
     public final String FILENAME = "highscore.ser"; 
     
@@ -105,6 +106,11 @@ public class Pinball extends Application  {
     public Ball pBall;
     private Timeline animation;
     public PathTransition ptLaunch; 
+    
+    //Declare game sound variables
+    String soundFile;
+    Media soundMedia;
+    MediaPlayer soundPlayer;
     
     /*
      * Authors: Gunnar Giil, Henriette Leknes
@@ -123,6 +129,7 @@ public class Pinball extends Application  {
         pLayout.getLayout(objects, lines, circles, arcs, rectangles);
         pinballGame.getChildren().addAll(objects, lines, circles, arcs, rectangles);
         
+        Text instruction = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers \n \n");
         instruction.setFont(Font.font("Verdana", 20));
         instruction.setFill(Color.BLUE);
         userAndScore.setFont(Font.font("Verdana", 40));
@@ -146,15 +153,18 @@ public class Pinball extends Application  {
                          "-fx-border-radius: 5;" +
                          "-fx-border-color: blue;" );
         
-        //fetching topTen-arraylist and generating highscorebox
+        //Highscore header
+        TOPFIFTEEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 20));
+        TOPFIFTEEN_HEADER.setFill(Color.BLUE);
+        
+        //fetching topFifteen-arraylist and generating highscorebox
         highScoreList = readHighScores();
-        printTopTen(highScoreList);
+        printTopFifteen(highScoreList);
         
         //building main game pane       
         pane.setRight(highScoreBox);
         pane.setCenter(pinballGame);
         pane.setBottom(info);
-        
         
         scene = new Scene(pane, WIDTH+200, HEIGHT);
         primaryStage.setTitle("Pinball!");
@@ -178,11 +188,11 @@ public class Pinball extends Application  {
     }
     
     // Author: Henriette Leknes
-    // newGame creates a new game and starts startGame methods
+    // newGame creates a new user and starts startGame methods
     public void newGame(){
         String userName = showInputDialog("Enter username: ");
-        if (userName.length() > 10){
-            userName = userName.substring(0, 10);
+        if (userName.length() > 15){
+            userName = userName.substring(0, 15);
         }
         u = new User(userName, 0);
         points = 0;
@@ -196,16 +206,17 @@ public class Pinball extends Application  {
     public void startGame(){
         //3 balls played -> player notified, highscorelist updated and ball count reset
         if (count > MAX_COUNT) {
-            showMessageDialog(null, "Game Over!!\n Score: " + u.getScore());
             highScoreList.add(u);
             Collections.sort(highScoreList);
-            if (highScoreList.size() > 10){
-                highScoreList.remove(10);
+            if (highScoreList.size() > 15){
+                highScoreList.remove(15);
             } 
             //saving highscores to file
             writeHighScores(highScoreList);
             //generating new highscorelist in pane
-            printTopTen(highScoreList);
+            printTopFifteen(highScoreList);
+            //user notificarion
+            showMessageDialog(null, "Game Over!!\n Score: " + u.getScore());
             //resetting game
             count = 1;
             newGame();  
@@ -281,7 +292,6 @@ public class Pinball extends Application  {
         animation.play();  
     }
     
-    // author: Gunnar Giil
     // moveBall() initiates checkCollision and adds simple(!) air friction and gravity. 
     // Also defines the x- and y-position of the center of the ball 
     public void moveBall() {
@@ -308,7 +318,7 @@ public class Pinball extends Application  {
         // check if ball leaves the game
         // if it leaves the game -> add sound and stop animation timeline   
         if (pBall.getCenterX() > WIDTH || pBall.getCenterX() < 0 || pBall.getCenterY() > HEIGHT || pBall.getCenterY() < 0) {
-            playSound(1);
+            playSound("ballOut.mp3");
             stop();
         }
         
@@ -327,7 +337,7 @@ public class Pinball extends Application  {
                 u.setScore(points += 100);
                 
                 //adds hit sound clip
-                playSound(2);
+                playSound("hit.mp3");
                 
                 for (int i = 0; i < circles.getChildren().size(); i++) {
                     circle = (Circle) circles.getChildren().get(i);
@@ -465,33 +475,18 @@ public class Pinball extends Application  {
         rotationAnimation.setCycleCount(2);
         rotationAnimation.setAutoReverse(true);
         rotationAnimation.play();
-        
         // Adding sound clip for flipper movement
-        playSound(3);
+        playSound("flipper.mp3");
     }
     
     //Author: Henriette Leknes
     //play soundclip according to integer input
-    public void playSound(int soundID){
-        String soundFile = "";  
-        
-        switch (soundID) {
-            case 1:
-                soundFile = "ballOut.mp3";
-                break;
-            case 2:
-                soundFile = "hit.mp3";
-                break;
-            case 3:
-                soundFile = "flipper.mp3";
-                break;
-            default:
-                break;
-        }
-        Media outSound = new Media(new File(soundFile).toURI().toString());
-        MediaPlayer outPlayer = new MediaPlayer(outSound);
-        outPlayer.play();
+    public void playSound(String soundFile){
+        soundMedia = new Media(new File(soundFile).toURI().toString());
+        soundPlayer = new MediaPlayer(soundMedia);
+        soundPlayer.play();
     } 
+    
     
     //Author: Henriette Leknes
     //Opening highscorefile and fetching arraylist of users/scores
@@ -509,8 +504,33 @@ public class Pinball extends Application  {
         return highScoreList; 
     } 
     
+    
+     //Author: Henriette Leknes
+    //fetching highscorestring from arraylist and displaying in Highscorepane
+    //pane generation placed in method to enable refreshing after game finish
+    private void printTopFifteen(ArrayList<User> highScoreList) {
+        String topFifteen = "";     
+        if (highScoreList.size() > 0) {
+            for (User u: highScoreList){
+                topFifteen += u.toString() + "\n\n";
+            }
+        }
+        else {
+            topFifteen += "You are No 1!";
+        } 
+        
+        topFifteenTxt = new Text(topFifteen);
+        topFifteenTxt.setFont(Font.font("Verdana", 15));
+        topFifteenTxt.setFill(Color.BLUE);
+        topFifteenTxt.setTextAlignment(TextAlignment.RIGHT);
+        
+        highScoreBox.getChildren().clear();
+        highScoreBox.getChildren().addAll(TOPFIFTEEN_HEADER, topFifteenTxt);
+    }
+      
+        
     //Author: Henriette Leknes
-    //writing a new score to highscorelist
+    //writing a new highscorelist to file
     public void writeHighScores(ArrayList<User> highScoreList) {
         try {
             ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(FILENAME));
@@ -522,33 +542,7 @@ public class Pinball extends Application  {
         }
     } 
     
-    //Author: Henriette Leknes
-    //fetching highscorestring from arraylist and displaying in Highscorepane
-    //pane generation placed in method to enable refreshing after game finish
-    private void printTopTen(ArrayList<User> highScoreList) {
-        final Text TOPTEN_HEADER = new Text("Wall of Fame \n");
-        TOPTEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 20));
-        TOPTEN_HEADER.setFill(Color.BLUE);
-        
-        String topTen = "";     
-        if (highScoreList.size() > 0) {
-            for (User u: highScoreList){
-                topTen += u.toString() + "\n\n";
-            }
-        }
-        else {
-            topTen += "You are No 1!";
-        } 
-        
-        Text topTenTxt = new Text(topTen);
-        topTenTxt.setFont(Font.font("Verdana", 15));
-        topTenTxt.setFill(Color.BLUE);
-        topTenTxt.setTextAlignment(TextAlignment.RIGHT);
-        
-        highScoreBox.getChildren().clear();
-        highScoreBox.getChildren().addAll(TOPTEN_HEADER, topTenTxt);
-    }
-    
+      
     //Author: Gunnar Giil
      // stop() stops the animation if the ball hits the bottom 
     @Override
