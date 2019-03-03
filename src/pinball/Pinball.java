@@ -12,18 +12,26 @@ import java.util.Collections;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.PathTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
+import javafx.animation.Transition;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import static javafx.scene.input.KeyCode.LEFT;
 import static javafx.scene.input.KeyCode.RIGHT;
 import static javafx.scene.input.KeyCode.SPACE;
 import static javafx.scene.input.KeyCode.DOWN;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.scene.layout.Pane;
@@ -93,7 +101,7 @@ public class Pinball extends Application  {
     // User and score info
     final Text TOPFIFTEEN_HEADER = new Text("Wall of Fame \n");
     private Text topFifteenTxt;
-    private Text userAndScore = new Text(); 
+    Text userAndScore = new Text(); 
     private ArrayList<User> highScoreList = new ArrayList<>();
     VBox highScoreBox;
     public final String FILENAME = "highscore.ser"; 
@@ -125,11 +133,19 @@ public class Pinball extends Application  {
     public void start(Stage primaryStage) {
        
         BorderPane pane = new BorderPane();
-        
+               
         pLayout.getLayout(objects, lines, circles, arcs, rectangles);
         pinballGame.getChildren().addAll(objects, lines, circles, arcs, rectangles);
         
-        Text instruction = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers \n \n");
+        // setting game background image
+        String bilde = new File("pinball.jpg").toURI().toString();
+        BackgroundImage bgImg = new BackgroundImage(new Image(bilde,170,130,false,true),
+        BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER,
+          BackgroundSize.DEFAULT);
+        pinballGame.setBackground(new Background(bgImg));
+        
+        // setting game instruction and user score status texts
+        Text instruction = new Text("Press SPACE to start, DOWN to launch and LEFT/RIGHT for flippers \n");
         instruction.setFont(Font.font("Verdana", 20));
         instruction.setFill(Color.BLUE);
         userAndScore.setFont(Font.font("Verdana", 40));
@@ -137,21 +153,21 @@ public class Pinball extends Application  {
         
         VBox info = new VBox();
         info.getChildren().addAll(instruction, userAndScore);
-        info.setPrefHeight(90);
-        info.setStyle("-fx-background-color: lightgrey;" +
+        info.setPrefHeight(100);
+        info.setStyle("-fx-background-color: rgba(0, 100, 100, 0.3);" +
                          "-fx-border-style: solid inside;" +
-                         "-fx-border-width: 1;" +
+                         "-fx-border-width: 2;" +
                          "-fx-border-radius: 5;" +
-                         "-fx-border-color: blue;");
+                         "-fx-border-color: grey;");
         
         //building highscore sidepane
         highScoreBox = new VBox();
         highScoreBox.setPrefWidth(90);
-        highScoreBox.setStyle("-fx-background-color: lightgrey;" +
+        highScoreBox.setStyle("-fx-background-color: rgba(0, 100, 100, 0.3);" +
                          "-fx-border-style: solid inside;" +
-                         "-fx-border-width: 1;" +
+                         "-fx-border-width: 2;" +
                          "-fx-border-radius: 5;" +
-                         "-fx-border-color: blue;" );
+                         "-fx-border-color: grey;" );
         
         //Highscore header
         TOPFIFTEEN_HEADER.setFont(Font.font ("Verdana", FontWeight.BOLD, 20));
@@ -166,7 +182,7 @@ public class Pinball extends Application  {
         pane.setCenter(pinballGame);
         pane.setBottom(info);
         
-        scene = new Scene(pane, WIDTH+200, HEIGHT);
+        scene = new Scene(pane, WIDTH+200, HEIGHT+30);
         primaryStage.setTitle("Pinball!");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -287,7 +303,7 @@ public class Pinball extends Application  {
         if (dy > -1.02) {dy = -1.02;}
         
         // Initiate animation and ball movement
-        animation = new Timeline( new KeyFrame(Duration.millis(2.5), e -> moveBall()));
+        animation = new Timeline( new KeyFrame(Duration.millis(2), e -> moveBall()));
         animation.setCycleCount(Timeline.INDEFINITE);
         animation.play();  
     }
@@ -512,7 +528,7 @@ public class Pinball extends Application  {
         String topFifteen = "";     
         if (highScoreList.size() > 0) {
             for (User u: highScoreList){
-                topFifteen += u.toString() + "\n\n";
+                topFifteen += "\n" + u.toString() + "\n";
             }
         }
         else {
